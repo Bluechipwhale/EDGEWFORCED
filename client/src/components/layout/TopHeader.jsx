@@ -43,8 +43,9 @@ export default function TopHeader({
   return (
     <header className="sticky top-0 z-40 topbar-surface backdrop-blur-md px-4 lg:px-6 py-2.5 flex items-center justify-between shadow-xs border-b border-zinc-200 dark:border-zinc-800">
       {/* Left Branding & Company Info */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <button
+          aria-label="Open navigation menu"
           onClick={onToggleMobileMenu}
           className="lg:hidden p-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800"
         >
@@ -61,7 +62,7 @@ export default function TopHeader({
                 EdgeWForce
               </span>
             </div>
-            <span className="text-[10px] text-zinc-400 block -mt-0.5">
+            <span className="hidden sm:block text-[10px] text-zinc-400 -mt-0.5">
               Operating System for Field Sales & Operations
             </span>
           </div>
@@ -94,7 +95,7 @@ export default function TopHeader({
               : 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30 animate-pulse'
           }`}>
             {online ? <Wifi size={13} /> : <WifiOff size={13} />}
-            <span className="hidden sm:inline">{online ? 'Live Telemetry' : `Offline (${queuedCount})`}</span>
+            <span className="hidden sm:inline">{online ? 'Online' : `Offline (${queuedCount})`}</span>
           </div>
 
           {online && queuedCount > 0 && (
@@ -115,7 +116,7 @@ export default function TopHeader({
           onClick={handleMuteToggle}
           title={muted ? 'Unmute Audio Chimes' : 'Mute Audio Chimes'}
 
-          className="p-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+          className="hidden sm:block p-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
         >
           {muted ? <VolumeX size={17} className="text-zinc-400" /> : <Volume2 size={17} className="text-orange-500" />}
         </button>
@@ -131,6 +132,7 @@ export default function TopHeader({
 
         {/* Notification Bell */}
         <button
+          aria-label="Notifications"
           onClick={onOpenNotifications}
           className="relative p-2 text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
         >

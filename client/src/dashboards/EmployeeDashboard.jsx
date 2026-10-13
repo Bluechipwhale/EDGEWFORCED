@@ -88,8 +88,9 @@ export default function EmployeeDashboard({ user, initialTab = 'dashboard' }) {
       setAnnouncementsList(Array.isArray(ann) ? ann : (ann?.data || ann?.announcements || []));
       setBirthdaysList(Array.isArray(bdays) ? bdays : (bdays?.data || bdays?.birthdays || []));
       setTodaySchedule(sched?.data || sched || null);
-    } catch {
-      // Graceful offline fallback
+      setLoadError('');
+    } catch (error) {
+      setLoadError(error.message || 'Could not load your dashboard. Check your connection and try again.');
     }
   };
 
@@ -148,7 +149,7 @@ export default function EmployeeDashboard({ user, initialTab = 'dashboard' }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-5">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-zinc-900 dark:text-zinc-50">
             Welcome back, {user?.full_name?.split(' ')[0]}!
@@ -158,7 +159,7 @@ export default function EmployeeDashboard({ user, initialTab = 'dashboard' }) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="w-full xl:max-w-xl">
           <AttendanceControl onRecorded={loadData} />
         </div>
       </div>
@@ -187,6 +188,7 @@ export default function EmployeeDashboard({ user, initialTab = 'dashboard' }) {
         ].map(([id, label]) => (
           <button
             key={id}
+            aria-pressed={tab === id || (id === 'dashboard' && tab === 'home')}
             onClick={() => setTab(id)}
             className={`px-3.5 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition ${
               tab === id || (id === 'dashboard' && tab === 'home')
@@ -265,7 +267,7 @@ export default function EmployeeDashboard({ user, initialTab = 'dashboard' }) {
             />
             <StatCard
               title="Annual Leave"
-              value={`${leaveBalances?.annual ?? 20} Days`}
+              value={leaveBalances?.annual === undefined ? '—' : `${leaveBalances.annual} Days`}
               icon={Calendar}
               subtitle="Available Balance"
             />
