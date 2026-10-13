@@ -1,0 +1,48 @@
+{
+  "name": "edgewforce",
+  "version": "1.0.0",
+  "description": "EdgeWForce Enterprise Commercial Sales, Field Operations & Workforce Operating System",
+  "main": "server.js",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "start": "node server.js",
+    "server": "node server/src/index.js",
+    "build": "npm --workspace client run build",
+    "vercel-build": "npm --workspace client run build",
+    "dev": "npx --yes concurrently \"npm --workspace server run dev\" \"npm --workspace client run dev\"",
+    "test": "npm --workspace server test"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.4.0",
+    "nodemailer": "^10.1.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "engines": {
+    "node": "24.x"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
+  },
+  "optionalDependencies": {
+    "@esbuild/linux-x64": "0.25.12",
+    "@rollup/rollup-linux-x64-gnu": "4.62.4",
+    "@tailwindcss/oxide-linux-x64-gnu": "4.3.3",
+    "lightningcss-linux-x64-gnu": "1.32.0"
+  }
+}

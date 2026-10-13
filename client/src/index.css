@@ -1,0 +1,281 @@
+@import "tailwindcss";
+
+:root {
+  --brand-orange: #F57C00;
+  --brand-deep-orange: #E65100;
+  --brand-amber: #FFB300;
+  --brand-gold: #F9A825;
+  --brand-red: #D84315;
+  --brand-black: #111111;
+  --brand-slate: #18181B;
+  --brand-zinc: #27272A;
+  --brand-light-bg: #F8F8F6;
+  --brand-border-light: #E4E4E7;
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #F8F8F6;
+  color: #18181B;
+}
+
+.dark body,
+html.dark body {
+  background-color: #0E0E11;
+  color: #F4F4F5;
+}
+
+/* Sunburst Gradient Accents */
+.sunburst-bg {
+  background: radial-gradient(circle at 90% 10%, rgba(245, 124, 0, 0.15), transparent 45%),
+              radial-gradient(circle at 10% 90%, rgba(230, 81, 0, 0.12), transparent 45%);
+}
+
+.sunburst-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.sunburst-card::after {
+  content: '';
+  position: absolute;
+  top: -24px;
+  right: -24px;
+  width: 96px;
+  height: 96px;
+  background: radial-gradient(circle, rgba(245, 124, 0, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Surfaces & Cards */
+.surface-card {
+  background-color: #FFFFFF;
+  color: #18181B;
+  border: 1px solid #E4E4E7;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px 0 rgba(0, 0, 0, 0.02);
+}
+
+.dark .surface-card,
+html.dark .surface-card {
+  background-color: #18181B;
+  color: #F4F4F5;
+  border: 1px solid #27272A;
+  box-shadow: none;
+}
+
+.surface-card-subtle {
+  background-color: #F4F4F5;
+  color: #18181B;
+  border: 1px solid #E4E4E7;
+}
+
+.dark .surface-card-subtle,
+html.dark .surface-card-subtle {
+  background-color: #27272A;
+  color: #F4F4F5;
+  border: 1px solid #3F3F46;
+}
+
+/* Header & Sidebar */
+.topbar-surface {
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #18181B;
+  border-bottom: 1px solid #E4E4E7;
+}
+
+.dark .topbar-surface,
+html.dark .topbar-surface {
+  background-color: rgba(24, 24, 27, 0.95);
+  color: #F4F4F5;
+  border-bottom: 1px solid #27272A;
+}
+
+/* Buttons */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.1rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #F57C00 0%, #E65100 100%);
+  color: #FFFFFF !important;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 6px rgba(245, 124, 0, 0.25);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #FB8C00 0%, #EF6C00 100%);
+  box-shadow: 0 4px 12px rgba(245, 124, 0, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  background-color: #F4F4F5;
+  color: #18181B;
+  border: 1px solid #E4E4E7;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #E4E4E7;
+}
+
+.dark .btn-secondary,
+html.dark .btn-secondary {
+  background-color: #27272A;
+  color: #F4F4F5;
+  border: 1px solid #3F3F46;
+}
+
+.dark .btn-secondary:hover:not(:disabled),
+html.dark .btn-secondary:hover:not(:disabled) {
+  background-color: #3F3F46;
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.1rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  background-color: #D84315;
+  color: #FFFFFF !important;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-danger:hover {
+  background-color: #BF360C;
+}
+
+/* SOS Panic Beacon */
+.btn-sos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  font-weight: 800;
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #D84315 0%, #B71C1C 100%);
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  animation: pulse-sos 2s infinite;
+}
+
+@keyframes pulse-sos {
+  0% {
+    box-shadow: 0 0 0 0 rgba(216, 67, 21, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(216, 67, 21, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(216, 67, 21, 0);
+  }
+}
+
+/* Forms & Inputs */
+.form-input {
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.875rem;
+  border-radius: 0.5rem;
+  outline: none;
+  background-color: #FFFFFF;
+  border: 1px solid #D4D4D8;
+  color: #18181B;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-input:focus {
+  border-color: #F57C00;
+  box-shadow: 0 0 0 2px rgba(245, 124, 0, 0.2);
+}
+
+.dark .form-input,
+html.dark .form-input {
+  background-color: #121214;
+  border: 1px solid #27272A;
+  color: #F4F4F5;
+}
+
+.dark .form-input:focus,
+html.dark .form-input:focus {
+  border-color: #F57C00;
+  box-shadow: 0 0 0 2px rgba(245, 124, 0, 0.25);
+}
+
+/* Signature Canvas */
+.signature-canvas {
+  touch-action: none;
+  background-color: #FFFFFF;
+  border: 2px dashed #D4D4D8;
+  border-radius: 0.5rem;
+  width: 100%;
+  max-width: 100%;
+  height: 140px;
+}
+
+/* Live Camera Video */
+.camera-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.75rem;
+}
+
+/* Print Stylesheet for Receipts and Payslips */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+  }
+  .no-print, header, nav, aside, .btn-primary, .btn-secondary, button {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .surface-card {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+}

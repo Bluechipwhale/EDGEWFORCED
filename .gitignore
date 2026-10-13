@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production builds
+dist/
+build/
+client/dist/
+.vercel/
+
+# Environment Variables & Secrets
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+*.local
+!*.example
+!**/*.example
+!.env.example
+!.env.production.example
+
+# Ephemeral File Uploads & Local JSON Stores
+uploads/
+server/uploads/
+server/data/store.json
+server/data/*.json
+/data/
+**/store.json
+
+# Ensure source data directories are tracked
+!client/src/data/
+!client/src/data/**
+!server/src/data/
+!server/src/data/**
+
+# Logs & Runtime
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.system_generated/
+release/
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Scratch & Temporary testing scripts
+scratch/
+EdgeWForce/
+
+.vercel
+.env*

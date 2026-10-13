@@ -1,0 +1,13 @@
+.git/
+.system_generated/
+release/
+node_modules/
+client/dist/
+server/data/
+server/uploads/
+uploads/
+.env
+.env.*
+server/.env*
+server/src/tests/
+*.log
