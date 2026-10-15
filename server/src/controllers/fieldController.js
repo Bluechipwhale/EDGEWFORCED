@@ -29,8 +29,8 @@ export const fieldController = {
 
   async getShiftWindowStatus(req, res) {
     try {
-      const agentId = req.query.employee_id || req.user.employee?.id || req.user.id;
-      if (Number(agentId) !== Number(req.user.employee?.id) && !isManagementUser(req.user)) return res.status(403).json({ success: false, error: { message: 'You can only view your own attendance.' } });
+      const agentId = req.query.employee_id || req.user.employee?.id || null;
+      if (req.query.employee_id && Number(agentId) !== Number(req.user.employee?.id) && !isManagementUser(req.user)) return res.status(403).json({ success: false, error: { message: 'You can only view your own attendance.' } });
       const companyId = req.user.company_id || 1;
       const status = await fieldService.getShiftWindowStatus(agentId, companyId);
       res.json({ success: true, data: status, ...status });

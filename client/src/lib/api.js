@@ -22,7 +22,7 @@ function getAuthToken() {
 
 export async function request(path, options = {}) {
   const method = options.method || 'GET';
-  const requireOnline = options.requireOnline || /^\/(hr|locations|work-locations)(\/|\?|$)/.test(path) || /^\/(field\/(shifts|check-in|check-out)|employee\/(attendance|dashboard))/.test(path);
+  const requireOnline = options.requireOnline || /^\/(hr|locations|work-locations|collaboration)(\/|\?|$)/.test(path) || /^\/(field\/(shifts|check-in|check-out)|employee\/(attendance|dashboard))/.test(path);
   if (requireOnline && !navigator.onLine) throw new Error('Connect to the internet to record attendance or manage staff and workplaces.');
   const token = getAuthToken();
   const isFormData = options.body instanceof FormData;

@@ -31,6 +31,7 @@ For a **new empty Supabase project**, run these files in the SQL Editor in order
 3. `supabase/migrations/007_supabase_auth_integration.sql`
 4. `supabase/migrations/009_hr_import_and_workplace_assignments.sql`
 5. `supabase/migrations/010_attendance_and_module_support.sql`
+6. `supabase/migrations/011_project_collaboration.sql`
 
 The release also includes `supabase/install_empty_database.sql`, which combines these files in order for a new project.
 
@@ -88,6 +89,14 @@ The repository has `vercel.json` and `api/index.js` for a Vercel deployment from
 
 Configure Supabase Auth's site URL, allowed recovery redirects and email delivery for your live domain. The local backend is available only on one long-running server with DATA_BACKEND=local and EDGEWFORCE_DATA_DIR pointing to durable storage. It is unsuitable for serverless or multiple server processes. Local recovery requires SMTP and a valid expiring recovery code.
 
-Before using real staff data, verify administrator sign-in, a small import, first-login password change, office replacement, history and employee check-in on your hosted app. Local verification includes 142 automated server/API tests, the production frontend build, browser import/reassignment, dependency auditing and the workplace/attendance migrations in embedded PostgreSQL. A Vercel candidate was built for `edgeforce-server`; its live domain was not promoted because the configured Supabase host `nzyvcgakoqoouxuhzmgj.supabase.co` returned NXDOMAIN on 2026-10-13. No hosted data has been cleared or migrated. Update the active Supabase project settings, apply the SQL and complete hosted verification before promotion. Sales, payroll, storage and scheduling modules still require validation with your deployment and configuration before operational use. Background reminder delivery requires a scheduled worker; the long-running reminder process does not run inside Vercel functions.
+Verification on 2026-10-15 includes automated server tests, browser collaboration checks with separate test users, PostgreSQL migration/permission checks and hosted readiness. The active EdgeWForce project is tabuvkmkptaxrgygubjs.supabase.co. A new administrator is provisioned explicitly; the account password is not stored in source. See FEATURES.md and RELEASE_VERIFICATION.md for the feature guide and validation results.
 
 Staff import files are parsed in memory and are not uploaded to storage. Configure file storage policies for other modules appropriately; private HR and payroll files must not be exposed through public buckets.
+
+## Shared projects and scheduled tasks
+
+Apply migration 011 to an existing app-compatible installation. This migration is additive and does not clear staff, inventory, accounts or individual tasks. Open Projects & team chat to create a project, invite colleagues, use channels and threads, and schedule shared tasks. Dates are entered in Lagos time. Daily/weekly tasks create their next occurrence on completion.
+
+Run supabase/enable_project_scheduler.sql after migration 011 to enable the Supabase minute-by-minute in-app reminder job. It does not require a Vercel Pro cron plan. Check cron.job and cron.job_run_details for execution status. The standalone server also processes due project reminders. Duplicate delivery is prevented by database uniqueness constraints. Existing individual-task email/WhatsApp background delivery still requires the reminder worker and configured providers.
+
+To provision a separate administrator on a configured database, set ADMIN_EMAIL, ADMIN_PASSWORD (12+ characters), optional ADMIN_NAME and ADMIN_COMPANY_ID, then run node server/scripts/createAdministrator.js. It refuses to overwrite an existing account. Remove the password from the environment afterward.

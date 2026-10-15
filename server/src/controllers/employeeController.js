@@ -36,7 +36,8 @@ export const employeeController = {
 
   async clockAttendance(req, res) {
     try {
-      const empId = req.user.employee?.id || req.user.id;
+      const empId = req.user.employee?.id;
+      if (!empId) throw new Error('An employee profile and assigned workplace are required to clock attendance.');
       const record = await employeeService.clockAttendance(empId, req.body, req);
       res.json({ success: true, data: record, ...record, message: record.clock_out_time ? 'Clocked out successfully.' : 'Clocked in successfully.' });
     } catch (err) {

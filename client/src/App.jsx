@@ -19,6 +19,7 @@ import ExecutiveDashboard from './dashboards/ExecutiveDashboard';
 import ITAdminDashboard from './dashboards/ITAdminDashboard';
 import HRDashboard from './dashboards/HRDashboard';
 import EmployeeDashboard from './dashboards/EmployeeDashboard';
+import ProjectsDashboard from './dashboards/ProjectsDashboard';
 import EmployeeProfileView from './components/employee/EmployeeProfileView';
 import AgentSOSView from './components/field/AgentSOSView';
 
@@ -209,6 +210,7 @@ export default function App() {
 
   // Render Role & Feature Dashboards with Strict Least-Privilege Routing Guards
   const renderDashboard = () => {
+    if (currentTab === 'projects') return <ProjectsDashboard user={user} />;
     const role = user?.role_code;
     const isAgent = ['FIELD_AGENT', 'SALES_AGENT', 'BRAND_AMBASSADOR', 'PROMOTER'].includes(role);
 

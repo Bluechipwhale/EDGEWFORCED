@@ -31,6 +31,7 @@ import customerRoutes from './routes/customerRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import locationRoutes from './routes/locationRoutes.js';
 import scheduleRoutes from './routes/scheduleRoutes.js';
+import collaborationRoutes from './routes/collaborationRoutes.js';
 import { requireAuth } from './middleware/auth.js';
 import { employeeService } from './services/employeeService.js';
 import { reminderWorker } from './services/reminderWorker.js';
@@ -109,9 +110,9 @@ app.get('/api/health/ready', async (req, res) => {
     if (!db.isCloud && isServerless) throw new Error('A cloud database is required.');
     if (db.isCloud) {
       const result = await db.rpc('application_release_readiness', {});
-      if (result?.release !== '2026-10-13' || !result?.integer_ids) throw new Error('Database upgrade is required.');
+      if (result?.release !== '2026-10-15' || !result?.integer_ids || !result?.collaboration) throw new Error('Database upgrade is required.');
     } else await db.find('users', {}, { limit: 1 });
-    res.json({ ready: true, release: '2026-10-13' });
+    res.json({ ready: true, release: '2026-10-15' });
   } catch (err) {
     logger.error('Database readiness check failed: ' + err.message);
     res.status(503).json({ ready: false, message: 'Database configuration or upgrade requires attention.' });
@@ -138,6 +139,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/locations', locationRoutes);
 app.use('/api/work-locations', locationRoutes);
 app.use('/api/schedules', scheduleRoutes);
+app.use('/api/collaboration', collaborationRoutes);
 
 
 // Compatibility route for idle telemetry

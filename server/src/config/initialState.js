@@ -479,4 +479,11 @@ export const initialState = {
   "push_subscriptions": [],
   "notifications": [],
   "face_events": []
+  ,"collaboration_projects": []
+  ,"collaboration_members": []
+  ,"collaboration_channels": []
+  ,"collaboration_messages": []
+  ,"collaboration_tasks": []
+  ,"collaboration_events": []
+  ,"collaboration_notices": []
 };

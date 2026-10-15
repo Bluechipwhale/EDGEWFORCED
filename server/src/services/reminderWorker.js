@@ -9,6 +9,7 @@ import { logger } from '../utils/logger.js';
 import { reminderService } from './reminderService.js';
 import { emailService } from './emailService.js';
 import { whatsappService } from './whatsappService.js';
+import { collaborationService } from './collaborationService.js';
 
 let workerInterval = null;
 let isProcessing = false;
@@ -48,6 +49,7 @@ export const reminderWorker = {
     isProcessing = true;
 
     try {
+      await collaborationService.processDue();
       const dueReminders = await reminderService.getDueReminders();
       if (dueReminders.length === 0) {
         isProcessing = false;
@@ -190,7 +192,7 @@ export const reminderWorker = {
           user_id: user?.id,
           company_id: rem.company_id,
           channel: 'whatsapp',
-          status: waResult.status === 'sent' || waResult.simulated ? 'sent' : 'not_configured',
+          status: waResult.status === 'sent' ? 'sent' : 'not_configured',
           provider_message_id: waResult.provider_message_id,
           error_message: waResult.error
         });
@@ -215,7 +217,8 @@ export const reminderWorker = {
         user_id: user?.id,
         company_id: rem.company_id,
         channel: 'push',
-        status: 'sent'
+        status: 'not_configured',
+        error_message: 'A browser push delivery provider is not configured.'
       });
     }
 

@@ -113,7 +113,7 @@ export const notificationController = {
   async getNotifications(req, res) {
     try {
       const empId = req.user.employee?.id || req.user.id;
-      const data = await notificationService.getNotifications(empId);
+      const data = await notificationService.getNotifications(req.user.employee?.id, req.user);
       res.json({ success: true, data: data.notifications, ...data });
     } catch (err) {
       res.status(500).json({ success: false, error: { message: err.message } });
@@ -123,7 +123,7 @@ export const notificationController = {
   async markRead(req, res) {
     try {
       const empId = req.user.employee?.id || req.user.id;
-      const result = await notificationService.markRead(req.body?.id || req.params?.id || 'all', empId);
+      const result = await notificationService.markRead(req.body?.id || req.params?.id || 'all', req.user.employee?.id, req.user);
       res.json({ success: true, data: result });
     } catch (err) {
       res.status(400).json({ success: false, error: { message: err.message } });
@@ -133,7 +133,7 @@ export const notificationController = {
   async markAllRead(req, res) {
     try {
       const empId = req.user.employee?.id || req.user.id;
-      const result = await notificationService.markRead('all', empId);
+      const result = await notificationService.markRead('all', req.user.employee?.id, req.user);
       res.json({ success: true, data: result });
     } catch (err) {
       res.status(400).json({ success: false, error: { message: err.message } });

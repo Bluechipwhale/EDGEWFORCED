@@ -22,6 +22,7 @@ import {
   User,
   Award,
   LogOut
+  ,MessagesSquare
 } from 'lucide-react';
 
 export default function Sidebar({ user, currentTab, onSelectTab, onLogout, isMobile, onCloseMobile }) {
@@ -122,6 +123,7 @@ export default function Sidebar({ user, currentTab, onSelectTab, onLogout, isMob
     ];
   }
 
+  navSections.unshift({ title: 'Teamspace', items: [{ id: 'projects', label: 'Projects & team chat', icon: MessagesSquare }] });
   return (
     <aside className={`w-64 border-r border-zinc-200 dark:border-zinc-800 flex flex-col justify-between surface-card select-none ${
       isMobile ? 'h-full' : 'h-[calc(100vh-53px)] sticky top-[53px]'

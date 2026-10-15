@@ -138,6 +138,8 @@ export const db = {
     if (cloud) {
       let q = cloud.from(cloudTable(table)).select(options.select || '*');
       for (const [key, value] of Object.entries(filter)) if (value !== undefined && value !== null) q = q.eq(process.env.SUPABASE_SCHEMA_LAYOUT === 'canonical' && table === 'attendance' && key === 'date' ? 'attendance_date' : key, value);
+      for (const [key, value] of Object.entries(options.gt || {})) q = q.gt(key, value);
+      for (const [key, value] of Object.entries(options.lt || {})) q = q.lt(key, value);
       if (options.order) q = q.order(options.order.column, { ascending: options.order.ascending !== false });
       if (options.limit) q = q.limit(options.limit);
       const data = await cloudResult(q);
@@ -146,6 +148,7 @@ export const db = {
 
     const targetList = store[canonicalTable] || store[table] || [];
     let items = targetList.filter(item => {
+      if (Object.entries(options.gt || {}).some(([k,v]) => !(item[k] > v)) || Object.entries(options.lt || {}).some(([k,v]) => !(item[k] < v))) return false;
       return Object.entries(filter).every(([k, v]) => {
         if (v === undefined || v === null) return true;
         const itemVal = item[k] !== undefined ? item[k] : (k === 'date' ? item.attendance_date : (k === 'attendance_date' ? item.date : undefined));
