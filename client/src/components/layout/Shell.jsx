@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useActivityMonitor } from '../../hooks/useActivityMonitor';
 import TopHeader from './TopHeader';
 import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
@@ -35,12 +36,16 @@ export default function Shell({
   const [syncSuccessToast, setSyncSuccessToast] = useState('');
 
 
-  // Inactivity 10-Minute Idle Monitor State
-  const [idleModalOpen, setIdleModalOpen] = useState(false);
+  const activity = useActivityMonitor(user?.id);
+  const idleModalOpen = Boolean(activity.event);
   const [idleReason, setIdleReason] = useState('Break');
   const [idleExplanation, setIdleExplanation] = useState('');
-  const [idleStartTime, setIdleStartTime] = useState(null);
-  const lastActivityRef = useRef(Date.now());
+  const [idleError, setIdleError] = useState('');
+  const [idleSaving, setIdleSaving] = useState(false);
+  const handleLogout = async () => { await activity.stop(); onLogout(); };
+  useEffect(() => {
+    if (activity.event?.id) { setIdleError(''); playNotificationChime(); }
+  }, [activity.event?.id]);
 
   // Load notifications & check SOS alerts
   const loadNotifications = async () => {
@@ -142,81 +147,12 @@ export default function Shell({
     };
   }, []);
 
-  // Inactivity & Minimized Workstation Tracking: 10 minutes of no user interaction / minimized window
-  useEffect(() => {
-    const IDLE_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes (600,000 ms)
-    let isMinimized = document.visibilityState === 'hidden';
-
-    const resetIdleTimer = () => {
-      lastActivityRef.current = Date.now();
-    };
-
-    const handleVisibilityChange = () => {
-      isMinimized = document.visibilityState === 'hidden';
-      if (!isMinimized) {
-        lastActivityRef.current = Date.now();
-      }
-    };
-
-    const activityEvents = ['mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
-    activityEvents.forEach(evt => window.addEventListener(evt, resetIdleTimer, { passive: true }));
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', () => { isMinimized = true; });
-    window.addEventListener('focus', () => { isMinimized = false; resetIdleTimer(); });
-
-    const checkIdleInterval = setInterval(() => {
-      const elapsed = Date.now() - lastActivityRef.current;
-      if (elapsed >= IDLE_TIMEOUT_MS && !idleModalOpen) {
-        const startIso = new Date(lastActivityRef.current).toISOString();
-        setIdleStartTime(startIso);
-        setIdleModalOpen(true);
-        playNotificationChime();
-
-        const workstationReport = {
-          started_at: startIso,
-          duration_seconds: Math.round(elapsed / 1000),
-          reason: isMinimized ? 'Workstation Minimized / Background Inactivity (10m+)' : 'Workstation Idle Timeout (10m+)',
-          explanation: `Automated Workstation Telemetry Log - Staff: ${user?.full_name || 'Staff Member'} (${user?.employee_code || user?.email || 'ID:' + user?.id}) | Role: ${user?.role_code || 'Employee'} | Window State: ${isMinimized ? 'Minimized / Hidden' : 'Active Tab Inactive'} | Display: ${window.screen?.width || 0}x${window.screen?.height || 0}`,
-          workstation_snapshot: {
-            employee_name: user?.full_name,
-            employee_code: user?.employee_code,
-            email: user?.email,
-            role: user?.role_code,
-            window_state: isMinimized ? 'MINIMIZED_BACKGROUND' : 'TAB_INACTIVE',
-            screen_resolution: `${window.screen?.width || 0}x${window.screen?.height || 0}`,
-            current_tab: currentTab,
-            user_agent: navigator.userAgent
-          }
-        };
-
-        // Automatically log idle telemetry report to IT and HR queue
-        api.post('/employee/idle-event', workstationReport).catch(() => {});
-      }
-    }, 15000);
-
-    return () => {
-      activityEvents.forEach(evt => window.removeEventListener(evt, resetIdleTimer));
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      clearInterval(checkIdleInterval);
-    };
-  }, [idleModalOpen, user, currentTab]);
-
   const handleSubmitIdleReason = async () => {
-    try {
-      const durationSec = idleStartTime ? Math.round((Date.now() - new Date(idleStartTime).getTime()) / 1000) : 600;
-      await api.post('/employee/idle-event', {
-        started_at: idleStartTime || new Date(Date.now() - 600000).toISOString(),
-        duration_seconds: durationSec,
-        reason: idleReason,
-        explanation: idleExplanation
-      });
-    } catch {
-      // Fallback
-    } finally {
-      setIdleModalOpen(false);
-      setIdleExplanation('');
-      lastActivityRef.current = Date.now();
-    }
+    setIdleSaving(true);
+    setIdleError('');
+    try { await activity.explain(idleReason, idleExplanation); setIdleExplanation(''); }
+    catch (err) { setIdleError(err.message); }
+    finally { setIdleSaving(false); }
   };
 
   const handleMarkNotificationRead = async (id) => {
@@ -249,11 +185,15 @@ export default function Shell({
         onOpenCommandPalette={() => setCommandPaletteOpen(true)}
         onManualSync={runSync}
         syncing={syncing}
-        onLogout={onLogout}
+        onLogout={handleLogout}
         onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
       />
 
 
+      {activity.status !== 'disabled' && <div className="px-4 py-2 text-[11px] border-b border-zinc-200 dark:border-zinc-800 text-zinc-500 flex flex-wrap gap-x-3 gap-y-1" role="status">
+        <span className={activity.status === 'connected' ? 'text-emerald-600 font-semibold' : 'text-amber-600 font-semibold'}>{activity.status === 'connected' ? 'App activity monitoring connected' : activity.status === 'connecting' ? 'Connecting activity monitor…' : 'Activity monitor disconnected — reconnect to sync'}</span>
+        <span>HR is flagged after 10 minutes without app interaction. Connection gaps are marked unconfirmed.</span>
+      </div>}
       {/* Sync Success Toast Banner */}
       {syncSuccessToast && (
         <div className="bg-emerald-600 text-white text-xs font-bold py-2 px-4 flex items-center justify-between shadow-md animate-fade-in">
@@ -331,17 +271,17 @@ export default function Shell({
 
       {/* Inactivity Telemetry 10-Minute Idle Prompt Modal */}
       <Modal
-        title="Workstation Inactivity Check"
-        subtitle="10 Minutes of inactivity detected on EdgeWForce"
+        title="App activity check"
+        subtitle="A 10-minute gap has been flagged for HR review"
         isOpen={idleModalOpen}
-        onClose={() => {}}
+        onClose={activity.dismiss}
         maxWidth="max-w-md"
       >
         <div className="space-y-4 text-xs">
           <div className="p-3 rounded-xl surface-card-subtle border border-orange-500/30 flex items-start gap-2.5">
             <Activity size={18} className="text-orange-500 mt-0.5 flex-shrink-0" />
             <p className="text-zinc-700 dark:text-zinc-300 leading-relaxed">
-              We noticed you have been inactive for approximately 10 minutes. In accordance with Experiential Edge's transparent workforce telemetry policy, please choose the activity for this period.
+              EdgeWForce recorded a gap in app interaction. This can include meetings, reading or connection problems. Add context for HR; this flag does not prove you stopped working. Only interaction counts are tracked, never typed text or screenshots.
             </p>
           </div>
 
@@ -375,17 +315,20 @@ export default function Shell({
               rows="2"
               placeholder="e.g. Discussing Q3 sales order with retail manager Alhaji Bello..."
               className="form-input"
+              maxLength={2000}
               value={idleExplanation}
               onChange={(e) => setIdleExplanation(e.target.value)}
             />
           </div>
 
+          {idleError && <p role="alert" className="text-red-600">{idleError}</p>}
           <button
             type="button"
             onClick={handleSubmitIdleReason}
+            disabled={idleSaving}
             className="btn-primary w-full py-2.5"
           >
-            Submit & Resume Workspace
+            {idleSaving ? 'Saving…' : 'Submit explanation'}
           </button>
         </div>
       </Modal>

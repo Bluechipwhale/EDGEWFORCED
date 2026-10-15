@@ -91,8 +91,8 @@ export const hrController = {
 
   async getIdleEvents(req, res) {
     try {
-      const alerts = await db.find('idle_alerts', {}, { order: { column: 'created_at', ascending: false } });
-      const employees = await db.find('employees');
+      const alerts = await db.find('idle_alerts', { company_id: Number(req.user.company_id) }, { order: { column: 'created_at', ascending: false } });
+      const employees = await db.find('employees', { company_id: Number(req.user.company_id) });
       const data = alerts.map(a => ({
         ...a,
         employee: employees.find(e => Number(e.id) === Number(a.employee_id))

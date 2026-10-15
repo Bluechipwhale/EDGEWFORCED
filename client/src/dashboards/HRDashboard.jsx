@@ -38,6 +38,7 @@ import StatCard from '../components/common/StatCard';
 import Modal from '../components/common/Modal';
 import OrgChartTree from '../components/hr/OrgChartTree';
 import IdleReviewModal from '../components/hr/IdleReviewModal';
+import ActivityReviewPanel from '../components/hr/ActivityReviewPanel';
 import TaskAssignModal from '../components/hr/TaskAssignModal';
 import StateCitySelect from '../components/common/StateCitySelect';
 import LocationAssignmentDashboard from '../components/hr/LocationAssignmentDashboard';
@@ -484,6 +485,7 @@ export default function HRDashboard({ user, initialTab = 'overview' }) {
       {/* TAB 1: OVERVIEW */}
       {tab === 'overview' && (
         <div className="space-y-6">
+          <ActivityReviewPanel />
           {/* Active Critical SOS Panic Beacon Callout */}
           {sosEvents.filter(s => s.status === 'active').map((sos) => (
             <div key={sos.id} className="p-4 rounded-2xl bg-gradient-to-r from-red-600 via-rose-600 to-red-700 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border-2 border-red-400 animate-pulse">
@@ -595,7 +597,7 @@ export default function HRDashboard({ user, initialTab = 'overview' }) {
             <div className="surface-card rounded-xl p-5 space-y-3">
               <h3 className="text-sm font-extrabold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
                 <Activity size={16} className="text-orange-500" />
-                <span>Recent Workstation Inactivity</span>
+                <span>Earlier inactivity reports</span>
               </h3>
               <div className="space-y-2.5">
                 {(stats?.idle_records || []).map((alert) => (
@@ -618,7 +620,7 @@ export default function HRDashboard({ user, initialTab = 'overview' }) {
                   </div>
                 ))}
                 {(!stats?.idle_records || stats.idle_records.length === 0) && (
-                  <div className="p-4 text-center text-xs text-zinc-400">No recent inactivity alerts detected.</div>
+                  <div className="p-4 text-center text-xs text-zinc-400">No earlier reports. Automatic flags appear in Staff activity review above.</div>
                 )}
               </div>
             </div>

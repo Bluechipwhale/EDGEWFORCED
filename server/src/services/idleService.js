@@ -8,6 +8,7 @@ import { db } from '../config/database.js';
 import { recordAudit } from '../middleware/auditLogger.js';
 import { emailService } from './emailService.js';
 import { logger } from '../utils/logger.js';
+import { activityService } from './activityService.js';
 
 export const idleService = {
   /**
@@ -24,9 +25,12 @@ export const idleService = {
       workstation_snapshot = {}
     } = data;
 
-    const empId = employee_id || actor?.employee?.id || actor?.id;
-    const employee = empId ? await db.findById('employees', empId) : null;
-    const user = user_id ? await db.findById('users', user_id) : (employee?.user_id ? await db.findById('users', employee.user_id) : actor);
+    const { user, employee } = await activityService.identity(actor);
+    if (!employee) throw Object.assign(new Error('A linked active staff profile is required.'), { status: 403 });
+    if ((employee_id && Number(employee_id) !== Number(employee.id)) || (user_id && Number(user_id) !== Number(user.id))) throw Object.assign(new Error('You can only report your own activity.'), { status: 403 });
+    if (!Number.isFinite(Number(duration_seconds)) || Number(duration_seconds) < 600 || Number(duration_seconds) > 86400) throw new Error('Idle duration must be between 10 minutes and 24 hours.');
+    if (started_at && (!Number.isFinite(Date.parse(started_at)) || Date.parse(started_at) > Date.now() || Date.parse(started_at) < Date.now() - 86400000)) throw new Error('Invalid inactivity start time.');
+    if (String(reason || '').length > 100 || String(explanation || '').length > 2000) throw new Error('Activity explanation is too long.');
 
     const empName = employee ? `${employee.first_name} ${employee.last_name}` : (user?.full_name || 'Staff Member');
     const dept = employee?.department || 'Operations';
@@ -49,6 +53,7 @@ export const idleService = {
 
     // Also populate legacy idle_alerts table for backward compatibility
     await db.insert('idle_alerts', {
+      company_id: session.company_id,
       employee_id: employee?.id ? Number(employee.id) : null,
       started_at: session.idle_started_at,
       ended_at: new Date().toISOString(),
@@ -59,7 +64,8 @@ export const idleService = {
     });
 
     // 1. Alert IT Administrators
-    const itUsers = await db.find('users', { role_code: 'super_admin' });
+    const companyUsers = await db.find('users', { company_id: session.company_id, status: 'active' });
+    const itUsers = companyUsers.filter(u => ['SUPER_ADMIN', 'IT_ADMIN'].includes(String(u.role_code).toUpperCase()));
     for (const it of itUsers) {
       const itEmp = await db.findOne('employees', { user_id: it.id });
       if (itEmp?.id) {
@@ -78,7 +84,7 @@ export const idleService = {
     }
 
     // 2. Alert HR Command Center
-    const hrUsers = await db.find('users', { role_code: 'hr_manager' });
+    const hrUsers = companyUsers.filter(u => ['HR', 'HR_MANAGER'].includes(String(u.role_code).toUpperCase()));
     for (const hr of hrUsers) {
       const hrEmp = await db.findOne('employees', { user_id: hr.id });
       if (hrEmp?.id) {
@@ -108,23 +114,11 @@ export const idleService = {
    */
   async explainIdleSession(sessionId, data, actor = null, req = null) {
     const { reason, reason_details } = data;
-
-    let session = await db.findById('employee_idle_sessions', sessionId);
-    if (!session) {
-      // Find latest pending session for this employee
-      const empId = actor?.employee?.id || actor?.id;
-      const list = await db.find('employee_idle_sessions', { employee_id: Number(empId) });
-      session = list.find(s => s.status === 'pending') || list[list.length - 1];
-    }
-
-    if (!session) {
-      // Create and resolve on the fly
-      return await this.startIdleSession({
-        ...data,
-        reason,
-        explanation: reason_details
-      }, actor, req);
-    }
+    await activityService.identity(actor);
+    const session = await db.findById('employee_idle_sessions', sessionId);
+    if (!session || Number(session.company_id) !== Number(actor.company_id)) throw Object.assign(new Error('Activity event not found.'), { status: 404 });
+    if (Number(session.user_id) !== Number(actor.id)) throw Object.assign(new Error('You can only explain your own activity.'), { status: 403 });
+    if (!reason || String(reason).length > 100 || String(reason_details || '').length > 2000) throw new Error('Invalid activity explanation.');
 
     const updated = await db.update('employee_idle_sessions', session.id, {
       reason: reason || 'Break',
@@ -133,7 +127,7 @@ export const idleService = {
     });
 
     // Also update legacy table
-    const legacy = await db.findOne('idle_alerts', { employee_id: session.employee_id, resolved: false });
+    const legacy = await db.findOne('idle_alerts', { company_id: session.company_id, employee_id: session.employee_id, started_at: session.idle_started_at });
     if (legacy) {
       await db.update('idle_alerts', legacy.id, {
         reason: updated.reason,
@@ -153,9 +147,11 @@ export const idleService = {
   /**
    * Retrieves idle telemetry sessions for IT & HR review.
    */
-  async getIdleSessions(filters = {}) {
-    const all = await db.find('employee_idle_sessions', {}, { order: { column: 'detected_at', ascending: false }, limit: 100 });
-    const employees = await db.find('employees');
+  async getIdleSessions(filters = {}, actor = null) {
+    const { user } = await activityService.identity(actor);
+    const scope = { company_id: Number(user.company_id), ...(!activityService.canReview(user) ? { user_id: Number(user.id) } : {}) };
+    const all = await db.find('employee_idle_sessions', scope, { order: { column: 'detected_at', ascending: false }, limit: 100 });
+    const employees = await db.find('employees', { company_id: Number(actor.company_id) });
 
     return all.map(s => {
       const emp = employees.find(e => Number(e.id) === Number(s.employee_id));
@@ -171,8 +167,8 @@ export const idleService = {
   /**
    * Aggregates activity analytics for HR and Executive views.
    */
-  async getIdleAnalytics() {
-    const sessions = await db.find('employee_idle_sessions');
+  async getIdleAnalytics(actor = null) {
+    const sessions = await this.getIdleSessions({}, actor);
     const total = sessions.length;
     const explained = sessions.filter(s => s.status === 'explained').length;
     const pending = sessions.filter(s => s.status === 'pending').length;

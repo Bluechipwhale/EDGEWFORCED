@@ -43,3 +43,12 @@ Automated tests cover these core service workflows. Hosted verification is recor
 Email/WhatsApp delivery, browser push, online payment processing, external AI and biometric verification require their provider configuration and end-to-end acceptance checks. The features are retained, and no claim is made that an unconfigured provider has delivered a message, charged a payment or verified a face. Existing individual-task background email/WhatsApp delivery uses the worker; the new Supabase schedule handles project in-app reminders.
 
 Passwords are never committed to source. A separate administrator is explicitly provisioned using `server/scripts/createAdministrator.js`; existing administrator accounts are not reset or replaced.
+
+## Staff activity and HR review
+
+- Authenticated active staff profiles report app interaction counts every 30 seconds. No typed text, screenshots, camera, device applications or operating-system activity are collected.
+- After 600 seconds without observed interaction, the server records one flag per inactivity period. A Supabase job checks every minute, including when browsers are suspended or closed. The notification bell refreshes every 30 seconds.
+- Recent heartbeats distinguish app inactivity from an unconfirmed lost connection. Activity in any signed-in tab counts, and returning closes the open period without deleting its history.
+- HR/HR_MANAGER users in the same company receive an in-app notice, even without an employee profile. Administrators receive fallback notices if no active HR account exists.
+- HR Overview has an activity review queue with explanations, resumed activity, Lagos timestamps, acknowledgement and history. Staff can explain their own events and continue working; review access is limited to authorized company managers.
+- Monitoring starts with a signed-in active staff profile and stops on explicit sign-out. It is not limited to clocked-in hours. Closing the browser without signing out can produce a connection-gap flag. A flag is context for human review, not proof that someone stopped working.

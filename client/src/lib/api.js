@@ -22,8 +22,8 @@ function getAuthToken() {
 
 export async function request(path, options = {}) {
   const method = options.method || 'GET';
-  const requireOnline = options.requireOnline || /^\/(hr|locations|work-locations|collaboration)(\/|\?|$)/.test(path) || /^\/(field\/(shifts|check-in|check-out)|employee\/(attendance|dashboard))/.test(path);
-  if (requireOnline && !navigator.onLine) throw new Error('Connect to the internet to record attendance or manage staff and workplaces.');
+  const requireOnline = options.requireOnline || /^\/(hr|locations|work-locations|collaboration|activity)(\/|\?|$)/.test(path) || /^\/(field\/(shifts|check-in|check-out)|employee\/(attendance|dashboard))/.test(path);
+  if (requireOnline && !navigator.onLine) throw new Error('Connect to the internet to use this live feature.');
   const token = getAuthToken();
   const isFormData = options.body instanceof FormData;
 
@@ -113,7 +113,7 @@ export async function request(path, options = {}) {
 
     if (!navigator.onLine) {
       err.isOffline = true;
-      err.message = 'No internet connection. Data will be synchronized when network returns.';
+      err.message = requireOnline ? 'No internet connection. Reconnect and retry this action.' : 'No internet connection. Data will be synchronized when network returns.';
     }
     throw err;
   }

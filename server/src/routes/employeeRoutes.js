@@ -29,6 +29,7 @@ router.put('/okrs/:id', employeeController.updateOKR);
 router.get('/tasks', employeeController.getTasks);
 router.put('/tasks/:id', employeeController.updateTask);
 router.post('/idle-events', employeeController.logIdleEvent);
+router.post('/idle-event', employeeController.logIdleEvent);
 router.get('/announcements', employeeController.getAnnouncements);
 router.get('/birthdays', employeeController.getUpcomingBirthdays);
 
