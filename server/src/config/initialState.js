@@ -479,6 +479,9 @@ export const initialState = {
   "push_subscriptions": [],
   "notifications": [],
   "face_events": []
+  ,"workforce_activity_presence": []
+  ,"workforce_activity_events": []
+  ,"workforce_activity_notices": []
   ,"collaboration_projects": []
   ,"collaboration_members": []
   ,"collaboration_channels": []

@@ -100,3 +100,13 @@ Apply migration 011 to an existing app-compatible installation. This migration i
 Run supabase/enable_project_scheduler.sql after migration 011 to enable the Supabase minute-by-minute in-app reminder job. It does not require a Vercel Pro cron plan. Check cron.job and cron.job_run_details for execution status. The standalone server also processes due project reminders. Duplicate delivery is prevented by database uniqueness constraints. Existing individual-task email/WhatsApp background delivery still requires the reminder worker and configured providers.
 
 To provision a separate administrator on a configured database, set ADMIN_EMAIL, ADMIN_PASSWORD (12+ characters), optional ADMIN_NAME and ADMIN_COMPANY_ID, then run node server/scripts/createAdministrator.js. It refuses to overwrite an existing account. Remove the password from the environment afterward.
+
+## Ten-minute app activity flags
+
+Apply additive migration 012_workforce_activity.sql, then run supabase/enable_activity_scheduler.sql on the active Supabase project. Neither script clears staff, accounts, inventory or existing reports. Existing installations must apply this migration before deploying the updated API; readiness checks require its RPC.
+
+The edgewforce-activity-monitor job runs every minute independently of Vercel requests. Inspect cron.job and cron.job_run_details for active/successful execution. Detection uses server timestamps and a 600-second threshold; the scheduled flag can appear up to one minute after the threshold, plus the 30-second notification refresh. Browser timers are not the sole detector. No SMTP or paid Vercel cron is needed for these in-app alerts.
+
+Tracking applies to signed-in active employee profiles, across tabs. Explicit sign-out stops the user's active presence records. Browser close, sleep and network loss are marked as unconfirmed connection gaps. Office/device activity outside EdgeWForce is not visible. The interface discloses monitoring and lets staff explain a flag. This is not a tamper-proof productivity or attendance measurement. Preserve HR event history and restrict access using the existing company role policy.
+
+For one durable local server, HR queue reads and staff heartbeats process due flags. Automatic unattended checks require a worker calling activityService.processDue for each company; the production Vercel deployment uses Supabase pg_cron instead.

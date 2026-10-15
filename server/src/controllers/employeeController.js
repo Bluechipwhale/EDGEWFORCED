@@ -149,7 +149,7 @@ export const employeeController = {
 
   async logIdleEvent(req, res) {
     try {
-      const empId = req.user.employee?.id || req.user.id;
+      const empId = req.user.employee?.id;
       const alert = await employeeService.logIdleEvent(empId, req.body, req);
       res.status(201).json({ success: true, data: alert, ...alert, message: 'Inactivity explanation logged.' });
     } catch (err) {

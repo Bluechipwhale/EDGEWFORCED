@@ -26,6 +26,7 @@ export const hrService = {
     const employees = await db.find('employees', { status: 'active', company_id: actor?.company_id || 1 });
     const attendance = await db.find('attendance', { date: todayStr, company_id: actor?.company_id || 1 });
     const idleRecords = (await db.find('idle_alerts', { resolved: false })).filter(r => employees.some(e => Number(e.id) === Number(r.employee_id)));
+    const activityRecords = await db.find('workforce_activity_events', { company_id: Number(actor?.company_id || 1) }, { order: { column: 'detected_at', ascending: false }, limit: 200 });
     const openSOS = (await db.find('sos', { status: 'active' })).filter(r => employees.some(e => Number(e.id) === Number(r.agent_id)));
     const leaveRequests = (await db.find('leave_requests', { status: 'pending' })).filter(r => employees.some(e => Number(e.id) === Number(r.employee_id)));
     const tasks = await db.find('tasks', {company_id:actor?.company_id||1});
@@ -56,8 +57,8 @@ export const hrService = {
       late_today: lateCount,
       absent_today: absentCount,
       on_leave_today: onLeaveCount,
-      currently_idle: idleRecords.length,
-      idle_alerts: idleRecords.length,
+      currently_idle: idleRecords.length + activityRecords.filter(r => !r.ended_at).length,
+      idle_alerts: idleRecords.length + activityRecords.filter(r => !r.reviewed_at).length,
       open_sos: openSOS.length,
       pending_leave: leaveRequests.length,
       active_tasks: activeTasks.length,
