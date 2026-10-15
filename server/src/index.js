@@ -89,12 +89,22 @@ app.use('/uploads', express.static(uploadDir));
 // 3. Rate Limiting
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 1000,
+  // An office may have many staff behind the same public IP; chat polling
+  // must not consume their attendance and operational request allowance.
+  max: 20000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests. Please slow down.' } }
 });
 app.use('/api', generalLimiter);
+app.use('/api/auth/login', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: { message: 'Too many failed sign-in attempts. Please try again later.' } }
+}));
 
 // 4. Health Check
 app.get('/api/health', (req, res) => {
