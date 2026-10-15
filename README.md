@@ -69,7 +69,7 @@ To create your first administrator, set `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_A
 node server/scripts/bootstrapAdmin.js
 ```
 
-The bootstrap only works when the users table is empty and creates no employee record or inventory. For Supabase, use `supabase/install_empty_database.sql` (the app-compatible schema and migrations 006, 007, 009 and 010), and configure `SUPABASE_SERVICE_ROLE_KEY`. No predefined login credentials are supplied.
+The bootstrap only works when the users table is empty and creates no employee record or inventory. For Supabase, use `supabase/install_empty_database.sql` (the app-compatible schema and migrations 006, 007, 009, 010 and 011), and configure `SUPABASE_SERVICE_ROLE_KEY`. No predefined login credentials are supplied.
 
 To reset a local database, stop the server and run `node server/scripts/cleanDatabase.js`. This clears all local accounts and operational records while retaining structural configuration. `EDGEWFORCE_DATA_DIR` can select a different local store directory.
 
@@ -77,7 +77,7 @@ For an existing cloud database, stop the backend and apply `supabase/migrations/
 
 Use **Staff Directory → Import Staff** to upload CSV or Excel, preview invalid rows and duplicates, and download newly generated account credentials. A blank template is in `templates/staff-import-template.csv`. Use **Assign workplace** on a staff row to choose their office; changing a primary office updates the directory and check-in permissions, with history retained. No personal staff dataset ships with the application.
 
-See [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md) for production configuration, database migrations, administrator bootstrap, import instructions and hosting limitations. A Vercel candidate is built; the unavailable configured Supabase project blocks live promotion.
+See [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md) for production configuration, database migrations, administrator bootstrap, import instructions and hosting limitations. The active Supabase project is configured. See FEATURES.md and RELEASE_VERIFICATION.md for current capabilities and verification.
 
 ---
 
@@ -134,3 +134,7 @@ The database layer is located in `supabase/migrations/`:
 
 ---
 *© 2026 Experiential Edge Nigeria Limited. All rights reserved.*
+
+## Shared projects and task scheduling
+
+Open **Projects & team chat** for private team projects, channels, message threads, mentions, shared task boards and daily/weekly schedules. Project reminders run every minute in Supabase. Existing operational modules remain available. See [FEATURES.md](FEATURES.md) for the complete guide.

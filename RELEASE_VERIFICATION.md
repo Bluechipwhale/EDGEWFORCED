@@ -1,0 +1,51 @@
+# Release verification — 15 October 2026
+
+Target: Vercel edgeforce-server; Supabase tabuvkmkptaxrgygubjs.
+
+## Confirmed
+
+- Hosted database readiness: HTTP 200; release 2026-10-15, integer IDs and collaboration migration available.
+- Separate new@edgewforce.com administrator: hosted sign-in passed; role SUPER_ADMIN. The password is not included in source.
+- Automated server tests: 150 passed, zero failed.
+- Production frontend build: passed.
+- PostgreSQL tests: workplace replacement/history/rollback, atomic attendance, private project creation, membership authorization, message retries, recurring task version checks, reminder idempotency and repeatable migrations passed.
+- Browser tests with isolated users: project creation, two members, channel messages, shared scheduled task, weekly recurrence setting, and a second member updating the task passed.
+- Supabase reminder job: active, every minute; latest recorded execution succeeded.
+- Source/release packaging checks exclude credentials, real runtime data and local verification accounts.
+
+## Hosted authenticated module reads
+
+All 27 endpoints below returned HTTP 200 and successful application responses. These checks validate access and reads against the actual hosted database; test users and sample project records were kept out of production.
+
+| Endpoint | Result |
+| --- | --- |
+| `/auth/me` | Passed |
+| `/hr/dashboard` | Passed |
+| `/hr/employees` | Passed |
+| `/hr/ranks` | Passed |
+| `/hr/announcements` | Passed |
+| `/hr/organization` | Passed |
+| `/hr/schedules` | Passed |
+| `/hr/attendance` | Passed |
+| `/hr/leave` | Passed |
+| `/sales/customers` | Passed |
+| `/sales/products` | Passed |
+| `/sales/orders` | Passed |
+| `/sales/payments` | Passed |
+| `/inventory/products` | Passed |
+| `/inventory/summary` | Passed |
+| `/delivery` | Passed |
+| `/accounting/overview` | Passed |
+| `/accounting/payslips` | Passed |
+| `/executive/dashboard` | Passed |
+| `/admin/settings` | Passed |
+| `/admin/structure` | Passed |
+| `/tasks` | Passed |
+| `/locations` | Passed |
+| `/collaboration/overview` | Passed |
+| `/collaboration/people` | Passed |
+| `/notifications` | Passed |
+| `/field/shifts/window-status` | Passed |
+
+
+Provider-dependent email, WhatsApp, push, online payment, external AI and biometric delivery are not certified by these checks. Core workflow mutation tests ran in isolated local and PostgreSQL environments. See FEATURES.md for capabilities and configuration requirements.
