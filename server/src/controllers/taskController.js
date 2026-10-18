@@ -94,7 +94,7 @@ export const taskController = {
     try {
       const [reminderStats, idleStats] = await Promise.all([
         reminderService.getReminderAnalytics(),
-        idleService.getIdleAnalytics()
+        idleService.getIdleAnalytics(req.user)
       ]);
       res.json({ success: true, data: { ...reminderStats, idle: idleStats } });
     } catch (err) {
@@ -132,7 +132,7 @@ export const taskController = {
 
   async getIdleReports(req, res) {
     try {
-      const reports = await idleService.getIdleSessions(req.query);
+      const reports = await idleService.getIdleSessions(req.query, req.user);
       res.json({ success: true, data: reports, reports });
     } catch (err) {
       res.status(500).json({ success: false, error: { message: err.message } });

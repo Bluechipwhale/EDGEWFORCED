@@ -13,6 +13,7 @@ import { storageService } from './storageService.js';
 import { isManagementUser } from '../middleware/rbac.js';
 
 function validateAttendanceActor(employee, req, override = false) {
+  if (employee.status !== 'active') throw new Error('This staff profile is not active. Contact HR before recording attendance.');
   if (!req?.user) return;
   if (Number(employee.company_id) !== Number(req.user.company_id || 1)) throw new Error('Employee is outside your company.');
   const ownId = req.user.employee?.id;
@@ -98,8 +99,8 @@ export const fieldService = {
     const completed = Boolean(todayAttendance?.clock_out || todayAttendance?.clock_out_time || eveningRecorded);
     const hasCheckIn = Boolean(todayAttendance?.clock_in || todayAttendance?.clock_in_time);
     const recorded = windowInfo.attendance_type === 'MORNING_ATTENDANCE' ? morningRecorded : windowInfo.attendance_type === 'MIDDAY_ATTENDANCE' ? middayRecorded : eveningRecorded;
-    const canRecord = Boolean(employee && windowInfo.allowed && !completed && !recorded && currentAssignedLocations.length && (windowInfo.action_type !== 'CLOCK_OUT' || hasCheckIn));
-    const actionMessage = completed ? 'Attendance completed for today.' : recorded ? 'Attendance already recorded for this window.' : !employee ? 'An employee profile is required.' : !currentAssignedLocations.length ? 'Ask HR to assign your work location.' : windowInfo.action_type === 'CLOCK_OUT' && !hasCheckIn ? 'Clock-out requires a clock-in recorded today.' : windowInfo.message;
+    const canRecord = Boolean(employee?.status === 'active' && windowInfo.allowed && !completed && !recorded && currentAssignedLocations.length && (windowInfo.action_type !== 'CLOCK_OUT' || hasCheckIn));
+    const actionMessage = completed ? 'Attendance completed for today.' : recorded ? 'Attendance already recorded for this window.' : !employee ? 'An employee profile is required.' : employee.status !== 'active' ? 'Your staff profile is inactive. Contact HR.' : !currentAssignedLocations.length ? 'Ask HR to assign your work location.' : windowInfo.action_type === 'CLOCK_OUT' && !hasCheckIn ? 'Clock-out requires a clock-in recorded today.' : windowInfo.message;
     return {
       server_time_iso: serverNow.toISOString(),
       lagos_time: lagosTime,
@@ -115,6 +116,25 @@ export const fieldService = {
       assigned_locations_count: currentAssignedLocations.length,
       assigned_locations: currentAssignedLocations
     };
+  },
+
+  async verifyAttendanceLocation(employeeId, data, req) {
+    const employee = await db.findById('employees', Number(employeeId));
+    if (!employee) throw new Error('A linked staff profile is required. Contact HR.');
+    validateAttendanceActor(employee, req);
+    const coordinates = validateCoordinates(data.latitude, data.longitude);
+    if (!coordinates.valid) throw new Error(coordinates.message);
+    const accuracy = Number(data.accuracy);
+    if (data.accuracy == null || !Number.isFinite(accuracy) || accuracy < 0 || accuracy > 500) throw new Error('GPS accuracy is too low. Enable precise location, then try again.');
+    const permitted = await locationService.getActivePermittedLocations(employee.id, employee.company_id);
+    if (!permitted.length) throw new Error('No active workstation with valid GPS coordinates is assigned. Ask HR to check your assignment.');
+    const locations = permitted.map(location => {
+      const distance = calculateHaversineDistance(coordinates.latitude, coordinates.longitude, location.latitude, location.longitude);
+      const radius = Number(location.geofence_radius || location.geofence_radius_meters || 150);
+      return { id: location.id, name: location.name, distance_meters: distance, radius_meters: radius, inside: distance <= radius };
+    }).sort((a,b) => a.distance_meters - b.distance_meters);
+    const matched = locations.find(location => location.inside);
+    return { verified: Boolean(matched), nearest: matched || locations[0], accuracy_meters: accuracy, checked_at: new Date().toISOString(), message: matched ? `You're within ${matched.name}. Your workstation is ready.` : `You're ${formatDistance(locations[0].distance_meters)} from ${locations[0].name}. Move within its ${locations[0].radius_meters}m boundary.` };
   },
 
   /**

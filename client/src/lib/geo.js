@@ -12,7 +12,7 @@ export function validateCoordinates(lat, lng) {
   const nLat = Number(lat);
   const nLng = Number(lng);
 
-  if (isNaN(nLat) || isNaN(nLng) || lat === null || lng === null || lat === undefined || lng === undefined) {
+  if (!Number.isFinite(nLat) || !Number.isFinite(nLng) || String(lat).trim() === '' || String(lng).trim() === '' || lat === null || lng === null || lat === undefined || lng === undefined) {
     return { valid: false, message: 'Coordinates are missing or non-numeric.' };
   }
 

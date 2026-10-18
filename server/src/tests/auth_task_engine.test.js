@@ -280,7 +280,7 @@ describe('4. Background Reminder Worker & 10m Inactivity Telemetry Tests', () =>
       user_id: 1,
       duration_seconds: 600,
       workstation_snapshot: { window_state: 'MINIMIZED_BACKGROUND', screen_resolution: '1920x1080' }
-    });
+    }, await db.findById('users', 1));
 
     assert.ok(session.id);
     assert.strictEqual(session.duration_seconds, 600);
@@ -290,7 +290,7 @@ describe('4. Background Reminder Worker & 10m Inactivity Telemetry Tests', () =>
     const explained = await idleService.explainIdleSession(session.id, {
       reason: 'Physical Meeting',
       reason_details: 'Attending client review presentation with Key Accounts Director'
-    });
+    }, await db.findById('users', 1));
 
     assert.strictEqual(explained.status, 'explained');
     assert.strictEqual(explained.reason, 'Physical Meeting');
@@ -298,7 +298,7 @@ describe('4. Background Reminder Worker & 10m Inactivity Telemetry Tests', () =>
 
   it('should aggregate reminder and idle analytics', async () => {
     const reminderAnalytics = await reminderService.getReminderAnalytics();
-    const idleAnalytics = await idleService.getIdleAnalytics();
+    const idleAnalytics = await idleService.getIdleAnalytics(await db.findById('users', 1));
 
     assert.ok(reminderAnalytics.total_deliveries_logged >= 0);
     assert.ok(idleAnalytics.total_idle_events >= 0);

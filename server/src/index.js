@@ -32,6 +32,7 @@ import taskRoutes from './routes/taskRoutes.js';
 import locationRoutes from './routes/locationRoutes.js';
 import scheduleRoutes from './routes/scheduleRoutes.js';
 import collaborationRoutes from './routes/collaborationRoutes.js';
+import activityRoutes from './routes/activityRoutes.js';
 import { requireAuth } from './middleware/auth.js';
 import { employeeService } from './services/employeeService.js';
 import { reminderWorker } from './services/reminderWorker.js';
@@ -120,7 +121,7 @@ app.get('/api/health/ready', async (req, res) => {
     if (!db.isCloud && isServerless) throw new Error('A cloud database is required.');
     if (db.isCloud) {
       const result = await db.rpc('application_release_readiness', {});
-      if (result?.release !== '2026-10-15' || !result?.integer_ids || !result?.collaboration) throw new Error('Database upgrade is required.');
+      if (result?.release !== '2026-10-15' || !result?.integer_ids || !result?.collaboration || !result?.activity_monitoring) throw new Error('Database upgrade is required.');
     } else await db.find('users', {}, { limit: 1 });
     res.json({ ready: true, release: '2026-10-15' });
   } catch (err) {
@@ -150,12 +151,13 @@ app.use('/api/locations', locationRoutes);
 app.use('/api/work-locations', locationRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/collaboration', collaborationRoutes);
+app.use('/api/activity', activityRoutes);
 
 
 // Compatibility route for idle telemetry
 app.post('/api/telemetry/idle', requireAuth, async (req, res) => {
   try {
-    const empId = req.user.employee?.id || req.user.id;
+    const empId = req.user.employee?.id;
     const alert = await employeeService.logIdleEvent(empId, req.body, req);
     res.json({ success: true, data: alert });
   } catch (err) {

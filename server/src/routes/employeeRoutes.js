@@ -29,6 +29,13 @@ router.put('/okrs/:id', employeeController.updateOKR);
 router.get('/tasks', employeeController.getTasks);
 router.put('/tasks/:id', employeeController.updateTask);
 router.post('/idle-events', employeeController.logIdleEvent);
+router.post('/idle-event', employeeController.logIdleEvent);
+router.post('/attendance/verify-location', async (req, res, next) => {
+  try {
+    const { fieldService } = await import('../services/fieldService.js');
+    res.json({ data: await fieldService.verifyAttendanceLocation(req.user.employee?.id, req.body, req) });
+  } catch (error) { error.status = error.status || 400; next(error); }
+});
 router.get('/announcements', employeeController.getAnnouncements);
 router.get('/birthdays', employeeController.getUpcomingBirthdays);
 

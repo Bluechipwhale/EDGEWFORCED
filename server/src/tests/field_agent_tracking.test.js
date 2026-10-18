@@ -9,6 +9,7 @@ import { db, resetTestData } from './helpers/database.js';
 import { fieldService } from '../services/fieldService.js';
 
 test('Field Force Tracking & Supervisor Monitoring Module Test Suite', async (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: Date.parse('2026-10-18T07:30:00Z') });
   await resetTestData();
 
   // Test fixtures for isolated tracking tests

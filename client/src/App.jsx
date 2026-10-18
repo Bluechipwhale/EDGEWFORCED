@@ -24,6 +24,7 @@ import EmployeeProfileView from './components/employee/EmployeeProfileView';
 import AgentSOSView from './components/field/AgentSOSView';
 
 import { api } from './lib/api';
+import { syncSessionEvent } from './lib/sessionState';
 import { supabase, getSupabaseSession, signOutSupabase } from './lib/supabase';
 
 export default function App() {
@@ -52,6 +53,7 @@ export default function App() {
 
   // Check first-time login password change requirement
   const [mustChangePassword, setMustChangePassword] = useState(false);
+  useEffect(() => { setMustChangePassword(Boolean(user?.requires_password_change)); }, [user?.requires_password_change]);
 
   const handleToggleTheme = () => {
     const next = !dark;
@@ -149,6 +151,7 @@ export default function App() {
     // Subscribe to Supabase Auth state changes
     if (supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        syncSessionEvent(localStorage, event, session);
         if (event === 'SIGNED_IN' && session?.access_token) {
           localStorage.setItem('ewf_token', session.access_token);
           api.get('/auth/me')
@@ -161,7 +164,6 @@ export default function App() {
             })
             .catch(() => {});
         } else if (event === 'SIGNED_OUT') {
-          signOutSupabase().catch(() => {});
           setUser(null);
         }
       });

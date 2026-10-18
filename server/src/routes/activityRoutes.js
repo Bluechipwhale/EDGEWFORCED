@@ -1,0 +1,13 @@
+import express from 'express';
+import rateLimit from 'express-rate-limit';
+import { requireAuth } from '../middleware/auth.js';
+import { activityService as service } from '../services/activityService.js';
+const router = express.Router();
+router.use(requireAuth);
+router.use(rateLimit({ windowMs: 60000, max: 60, keyGenerator: req => `${req.user.company_id}:${req.user.id}`, standardHeaders: true, legacyHeaders: false }));
+const handle = action => async (req, res, next) => { try { res.json({ data: await action(req) }); } catch (error) { next(error); } };
+router.post('/heartbeat', handle(req => service.heartbeat(req.user, req.body)));
+router.get('/reports', handle(req => service.reports(req.user)));
+router.post('/events/:id/explain', handle(req => service.updateEvent(req.user, req.params.id, req.body)));
+router.post('/events/:id/review', handle(req => service.updateEvent(req.user, req.params.id, req.body, true)));
+export default router;

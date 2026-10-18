@@ -23,6 +23,26 @@ body {
   color: #18181B;
 }
 
+.login-experience form[aria-label="Staff sign in"] .form-input {
+  background: #18181b;
+  color: #fafafa;
+  border: 1px solid #3f3f46;
+  border-radius: 1rem;
+  font-size: 1rem;
+  min-height: 3.25rem;
+  padding: .9rem 3rem .9rem 2.5rem;
+}
+.login-experience form[aria-label="Staff sign in"] .form-input:focus {
+  border-color: #fb923c;
+  box-shadow: 0 0 0 4px rgb(249 115 22 / .13);
+}
+.login-experience form[aria-label="Staff sign in"] .btn-primary {
+  min-height: 3.25rem;
+  border-radius: 1rem;
+  font-size: .95rem;
+}
+.attendance-card .btn-primary { border-radius: .85rem; min-height: 3rem; }
+
 button:focus-visible, a:focus-visible, select:focus-visible {
   outline: 2px solid var(--brand-orange);
   outline-offset: 3px;

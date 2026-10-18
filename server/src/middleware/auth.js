@@ -87,7 +87,7 @@ export async function requireAuth(req, res, next) {
       }
     }
 
-    if (!user || user.status === 'inactive' || user.status === 'suspended') {
+    if (!user || user.status !== 'active') {
       return res.status(401).json({
         success: false,
         error: {
