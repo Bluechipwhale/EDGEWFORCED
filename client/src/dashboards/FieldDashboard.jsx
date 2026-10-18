@@ -303,7 +303,7 @@ export default function FieldDashboard({ user, initialTab = 'manifest', onSelect
                 </span>
               </div>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 flex items-center gap-2 flex-wrap">
-                <span>WAT: {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Lagos' })}</span>
+                <span>Attendance uses Lagos time</span>
                 <span>•</span>
                 <span>GPS: {gpsAccuracy !== null ? `Fixed (±${gpsAccuracy}m)` : 'Acquiring Telemetry...'}</span>
                 {isShiftActive && (

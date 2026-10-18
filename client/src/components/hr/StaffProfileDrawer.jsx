@@ -272,7 +272,7 @@ export default function StaffProfileDrawer({
                 <div>
                   <div className="text-[10px] text-zinc-400 font-bold uppercase">Work Location</div>
                   <div className="font-semibold text-zinc-900 dark:text-zinc-100 mt-0.5">
-                    {employee.work_location || 'Headquarters'}
+                    {employee.work_location || 'No workstation assigned'}
                   </div>
                 </div>
                 <div className="col-span-2">

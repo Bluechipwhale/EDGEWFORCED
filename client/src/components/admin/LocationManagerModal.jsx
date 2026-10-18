@@ -52,8 +52,8 @@ export default function LocationManagerModal({
     state: 'Lagos',
     city: 'Ikeja',
     lga: '',
-    latitude: 6.5984,
-    longitude: 3.3524,
+    latitude: '',
+    longitude: '',
     geofence_radius: 150
   });
 
@@ -81,8 +81,8 @@ export default function LocationManagerModal({
           state: editLocation.state || 'Lagos',
           city: editLocation.city || '',
           lga: editLocation.lga || '',
-          latitude: Number(editLocation.latitude) || 6.5984,
-          longitude: Number(editLocation.longitude) || 3.3524,
+          latitude: editLocation.latitude ?? '',
+          longitude: editLocation.longitude ?? '',
           geofence_radius: Number(editLocation.geofence_radius || editLocation.geofence_radius_meters || 150)
         });
       } else {
@@ -93,8 +93,8 @@ export default function LocationManagerModal({
           state: 'Lagos',
           city: 'Ikeja',
           lga: 'Ikeja',
-          latitude: 6.5984,
-          longitude: 3.3524,
+          latitude: '',
+          longitude: '',
           geofence_radius: 150
         });
       }
@@ -105,8 +105,8 @@ export default function LocationManagerModal({
   useEffect(() => {
     if (!isOpen || !mapContainerRef.current) return;
 
-    const lat = Number(formData.latitude) || 6.5984;
-    const lng = Number(formData.longitude) || 3.3524;
+    const lat = validateCoordinates(formData.latitude, formData.longitude).valid ? Number(formData.latitude) : 6.5984;
+    const lng = validateCoordinates(formData.latitude, formData.longitude).valid ? Number(formData.longitude) : 3.3524;
     const radius = Number(formData.geofence_radius) || 150;
 
     if (!mapInstanceRef.current) {
@@ -399,6 +399,7 @@ export default function LocationManagerModal({
               </button>
             </div>
 
+            <p className="text-xs text-zinc-500 leading-relaxed">Choose the actual workstation pin, enter its coordinates, or capture GPS while you are there. The starting map view is only a guide.</p>
             {/* Map Container */}
             <div
               ref={mapContainerRef}
@@ -414,7 +415,7 @@ export default function LocationManagerModal({
                   step="any"
                   required
                   value={formData.latitude}
-                  onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setFormData({ ...formData, latitude: e.target.value === '' ? '' : Number(e.target.value) })}
                   className="w-full px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs font-mono text-zinc-800 dark:text-zinc-200"
                 />
               </div>
@@ -426,7 +427,7 @@ export default function LocationManagerModal({
                   step="any"
                   required
                   value={formData.longitude}
-                  onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setFormData({ ...formData, longitude: e.target.value === '' ? '' : Number(e.target.value) })}
                   className="w-full px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs font-mono text-zinc-800 dark:text-zinc-200"
                 />
               </div>

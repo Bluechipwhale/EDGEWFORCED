@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, ShieldCheck, Sparkles, AlertCircle, KeyRound, CheckCircle2, X, Lock, Mail } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Sparkles, AlertCircle, KeyRound, CheckCircle2, X, Lock, Mail, Eye, EyeOff, CalendarCheck, Users, Zap } from 'lucide-react';
 import { api } from '../lib/api';
-import { supabase, signInWithSupabase, requestSupabasePasswordReset, updateSupabasePassword } from '../lib/supabase';
+import { supabase, updateSupabasePassword } from '../lib/supabase';
 
 export default function LoginPage({ onLogin, onNavigatePublic }) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [capsLock, setCapsLock] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -59,36 +61,17 @@ export default function LoginPage({ onLogin, onNavigatePublic }) {
     setError('');
     setSuccessMsg('');
     try {
-      // 1. Authenticate via Supabase Auth or Backend API
-      const isEmailInput = identifier.includes('@');
-      let sessionData = null;
-
-      if (supabase && isEmailInput) {
-        try {
-          sessionData = await signInWithSupabase(identifier, password);
-        } catch (sbErr) {
-          // If Supabase Auth failed, let backend verify if there's any fallback
-          console.warn('Direct Supabase sign-in note:', sbErr.message);
-        }
+      const res = await api.post('/auth/login', { identifier: identifier.trim(), password }, { requireOnline: true });
+      const userData = res.user;
+      let token = res.token;
+      if (!token || !userData?.id) throw new Error('Sign-in did not return a valid staff profile. Please try again.');
+      if (supabase && res.refresh_token) {
+        const { data, error: sessionError } = await supabase.auth.setSession({ access_token: token, refresh_token: res.refresh_token });
+        if (sessionError || !data.session) throw new Error('Could not save your secure session. Please try again.');
+        token = data.session.access_token;
       }
-
-      // 2. Fetch full EdgeWForce user and employee profile from backend
-      const res = await api.post('/auth/login', {
-        identifier,
-        password,
-        supabase_token: sessionData?.session?.access_token || null
-      });
-
-      const token = sessionData?.session?.access_token || res.token || res.data?.token;
-      const userData = res.user || res.data?.user || (res.id ? res : res.data);
-
-      if (token) {
-        localStorage.setItem('ewf_token', token);
-      }
-      if (userData) {
-        localStorage.setItem('ewf_user', JSON.stringify(userData));
-      }
-
+      localStorage.setItem('ewf_token', token);
+      localStorage.setItem('ewf_user', JSON.stringify(userData));
       onLogin?.(userData);
     } catch (err) {
       setError(err.message || 'Invalid login credentials. Please verify your email and password.');
@@ -113,13 +96,7 @@ export default function LoginPage({ onLogin, onNavigatePublic }) {
       
       const res = await api.post('/auth/forgot-password', { identifier: emailToSend });
       
-      if (supabase && emailToSend.includes('@')) {
-        try {
-          await requestSupabasePasswordReset(emailToSend);
-        } catch (sbErr) {
-          console.warn('Supabase direct reset request note:', sbErr.message);
-        }
-      }
+
 
       if (!supabase && res.email_sent) setForgotStep(2);
       setForgotSuccess(
@@ -180,7 +157,7 @@ export default function LoginPage({ onLogin, onNavigatePublic }) {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 grid lg:grid-cols-12 select-none">
+    <div className="login-experience min-h-screen bg-zinc-950 text-zinc-100 grid lg:grid-cols-12">
       {/* Left Branding Showcase */}
       <div className="hidden lg:flex lg:col-span-7 p-12 flex-col justify-between relative overflow-hidden bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 border-r border-zinc-900 sunburst-bg">
         {/* Top Branding */}
@@ -204,21 +181,21 @@ export default function LoginPage({ onLogin, onNavigatePublic }) {
           </div>
 
           <h1 className="text-4xl xl:text-5xl font-black tracking-tight text-white leading-tight">
-            Make every sales and field action <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-orange-500">visible, verified and valuable</span>.
+            Your people.<br />Your projects.<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-300 via-amber-200 to-orange-400">One shared rhythm.</span>
           </h1>
 
           <p className="text-sm text-zinc-400 leading-relaxed max-w-lg">
-            Commercial sales force automation, 150m strict GPS geofencing, employee self-service, non-invasive idle telemetry, and AI sales intelligence in one unified operating system.
+            Start your day, connect with your team and keep work moving. Your workstation, attendance and shared projects, together in one calm workspace.
           </p>
 
           <div className="flex items-center gap-6 text-xs text-zinc-400 pt-3">
             <div className="flex items-center gap-2">
               <ShieldCheck size={16} className="text-orange-500" />
-              <span>Nigerian Localization (₦, 7.5% VAT)</span>
+              <span>Built for teams, designed for people</span>
             </div>
             <div className="flex items-center gap-2">
               <ShieldCheck size={16} className="text-orange-500" />
-              <span>150m Strict Geofencing</span>
+              <span>Your workplace. Your daily flow.</span>
             </div>
           </div>
         </div>
@@ -235,17 +212,18 @@ export default function LoginPage({ onLogin, onNavigatePublic }) {
       {/* Right Login Form */}
       <div className="lg:col-span-5 flex items-center justify-center p-6 sm:p-10">
         <div className="w-full max-w-md space-y-6">
-          <div className="space-y-1">
-            <h2 className="text-2xl font-black text-white">Sign In to EdgeWForce</h2>
+          <div className="lg:hidden flex items-center gap-3 mb-8"><img src="/favicon.svg" alt="" className="w-10 h-10" /><span className="text-lg font-bold tracking-tight">EdgeWForce<span className="block text-xs text-zinc-400 font-normal mt-1">Your working day, simplified.</span></span></div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-white">Welcome to your workspace</h2>
             <p className="text-xs text-zinc-400">
-              Enter your official email address or registered phone number to access your workspace.
+              Sign in with your work email, phone number or staff ID.
             </p>
           </div>
 
           {error && (
             <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-semibold flex items-center gap-2">
               <AlertCircle size={15} />
-              <span>{error}</span>
+              <span role="alert">{error}</span>
             </div>
           )}
 
@@ -256,25 +234,30 @@ export default function LoginPage({ onLogin, onNavigatePublic }) {
             </div>
           )}
 
-          <form onSubmit={handleSignIn} className="space-y-4">
+          {capsLock && <p role="status" className="text-sm text-amber-300">Caps Lock is on.</p>}
+          <form onSubmit={handleSignIn} className="space-y-5" aria-label="Staff sign in">
             <div>
-              <label className="block text-xs font-bold text-zinc-300 mb-1">Email address or phone number</label>
+              <label htmlFor="login-identifier" className="block text-sm font-semibold text-zinc-300 mb-2">Email, phone or staff ID</label>
               <div className="relative">
                 <input
+                  id="login-identifier"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
                   type="text"
                   required
-                  className="form-input bg-zinc-900 border-zinc-800 text-white text-xs py-2.5 pl-9"
-                  placeholder="name@company.com or 08012345678"
+                  className="form-input bg-zinc-900 border-zinc-800 text-white text-base py-3.5 pl-10 pr-12"
+                  placeholder="name@company.com, 080… or EMP-003"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                 />
-                <Mail size={15} className="absolute left-3 top-3 text-zinc-500" />
+                <Mail size={15} className="absolute left-3 top-4 text-zinc-500" />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-bold text-zinc-300">Password</label>
+                <label htmlFor="login-password" className="block text-sm font-semibold text-zinc-300">Password</label>
                 <button
                   type="button"
                   onClick={() => {
@@ -291,13 +274,17 @@ export default function LoginPage({ onLogin, onNavigatePublic }) {
               </div>
               <div className="relative">
                 <input
-                  type="password"
+                  id="login-password"
+                  autoComplete="current-password"
+                  type={showPassword ? "text" : "password"}
+                  onKeyUp={e => setCapsLock(e.getModifierState('CapsLock'))}
                   required
                   className="form-input bg-zinc-900 border-zinc-800 text-white text-xs py-2.5 pl-9"
                   placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(v => !v)} className="absolute right-2 top-1 p-3 text-zinc-400 hover:text-white">{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button>
                 <Lock size={15} className="absolute left-3 top-3 text-zinc-500" />
               </div>
             </div>
@@ -305,9 +292,9 @@ export default function LoginPage({ onLogin, onNavigatePublic }) {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full py-3 text-xs font-bold shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2"
+              className="btn-primary w-full py-3.5 text-sm font-bold shadow-lg shadow-orange-500/20 flex items-center justify-center gap-2"
             >
-              <span>{loading ? 'Authenticating…' : 'Enter Workspace'}</span>
+              <span>{loading ? 'Authenticating…' : 'Let’s get to work'}</span>
               <ArrowRight size={15} />
             </button>
           </form>

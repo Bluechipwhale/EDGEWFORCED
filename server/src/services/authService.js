@@ -20,6 +20,7 @@ const CLIENT_URL = process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',')[0]
 export async function findUserByIdentifier(identifier) {
   if (!identifier) return null;
   const trimmedInput = String(identifier).trim();
+  const isPhoneIdentifier = /^\+?[\d ()-]{8,20}$/.test(trimmedInput);
   let user = null;
 
   if (isEmail(trimmedInput)) {
@@ -41,7 +42,7 @@ export async function findUserByIdentifier(identifier) {
     }
   }
 
-  if (!user) {
+  if (!user && isPhoneIdentifier) {
     const normalizedPhone = normalizePhone(trimmedInput);
     if (normalizedPhone) {
       user = await db.findOne('users', { phone: normalizedPhone });
@@ -56,10 +57,16 @@ export async function findUserByIdentifier(identifier) {
   }
 
   // Fallback: Support login via Staff ID / Employee Code (e.g. EMP-1001, EMP-003, 003)
-  if (!user) {
+  if (!user && !isEmail(trimmedInput) && !isPhoneIdentifier) {
     const employees = await db.find('employees');
     const cleanInput = trimmedInput.toUpperCase();
-    const numOnly = cleanInput.replace(/[^0-9]/g, '');
+    const numOnly = /^(?:EMP[- ]?)?\d{1,10}$/.test(cleanInput) ? cleanInput.replace(/[^0-9]/g, '') : '';
+    const matches = employees.filter(e => {
+      const exact = [e.employee_code, e.staff_id].some(v => String(v || '').toUpperCase() === cleanInput);
+      const numeric = numOnly && [e.employee_code, e.staff_id].some(v => String(v || '').replace(/[^0-9]/g, '') === numOnly);
+      return exact || numeric;
+    });
+    if (matches.length > 1) throw new Error('This staff ID is shared. Sign in with your email address or phone number.');
     const emp = employees.find(e => {
       const empCode = (e.employee_code || '').toUpperCase();
       const staffId = String(e.staff_id || '').toUpperCase();
@@ -84,7 +91,7 @@ export const authService = {
    * Logs in an enterprise user via Supabase Auth with linked profile resolution.
    */
   async login(identifier, password, req = null) {
-    if (!identifier || !password) {
+    if (typeof identifier !== 'string' || typeof password !== 'string' || !identifier.trim() || !password || identifier.length > 254 || password.length > 256) {
       throw new Error('Please enter your email address or phone number, and your password.');
     }
 
@@ -188,6 +195,7 @@ export const authService = {
 
     const userProfile = {
       id: user.id,
+      company_id: user.company_id,
       uuid: user.uuid || user.auth_user_id || user.id,
       auth_user_id: user.auth_user_id || user.uuid || null,
       email: user.email,
@@ -229,6 +237,7 @@ export const authService = {
 
     return {
       id: user.id,
+      company_id: user.company_id,
       uuid: user.uuid || user.auth_user_id || user.id,
       auth_user_id: user.auth_user_id || user.uuid || null,
       email: user.email,
@@ -258,14 +267,17 @@ export const authService = {
 
     if (!user) throw new Error('User not found');
 
-    if (currentPassword && user.password_hash) {
+    if (!currentPassword) throw new Error('Current password is required.');
+    if (supabase && user.auth_user_id && !isTestMode) {
+      const result = await supabaseAuthService.signIn({ email: user.email, password: currentPassword });
+      if (!result?.data?.session) throw new Error('Current password is incorrect or the authentication service is unavailable.');
+    } else if (user.password_hash) {
       const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
       if (!isMatch) {
         throw new Error('Current password is incorrect.');
       }
     }
 
-    if (!currentPassword) throw new Error('Current password is required.');
     if (supabase && user.auth_user_id && !isTestMode) {
       if (!await supabaseAuthService.updatePassword(user.auth_user_id, newPassword)) throw new Error('Authentication password update failed. Try again.');
     }

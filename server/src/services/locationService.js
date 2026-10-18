@@ -77,7 +77,7 @@ export const locationService = {
       throw new Error(coordCheck.message || 'Valid GPS latitude and longitude are required.');
     }
 
-    const radius = Number(geofence_radius || geofence_radius_meters || 150);
+    const radius = Number(geofence_radius ?? geofence_radius_meters ?? 150);
     if (isNaN(radius) || radius < 20 || radius > 10000) {
       throw new Error('Permitted radius must be between 20 meters and 10,000 meters.');
     }
@@ -128,7 +128,9 @@ export const locationService = {
     if (data.state) updateFields.state = data.state;
     if (data.lga !== undefined) updateFields.lga = data.lga;
     if (data.city !== undefined) updateFields.city = data.city;
+    if (data.status && !['active', 'inactive'].includes(data.status)) throw new Error('Workstation status must be active or inactive.');
     if (data.status) updateFields.status = data.status;
+    if ((data.latitude !== undefined) !== (data.longitude !== undefined)) throw new Error('Update latitude and longitude together.');
 
     if (data.latitude !== undefined && data.longitude !== undefined) {
       const coordCheck = validateCoordinates(data.latitude, data.longitude);
@@ -139,8 +141,8 @@ export const locationService = {
       updateFields.longitude = coordCheck.longitude;
     }
 
-    if (data.geofence_radius || data.geofence_radius_meters) {
-      const radius = Number(data.geofence_radius || data.geofence_radius_meters);
+    if (data.geofence_radius !== undefined || data.geofence_radius_meters !== undefined) {
+      const radius = Number(data.geofence_radius ?? data.geofence_radius_meters);
       if (isNaN(radius) || radius < 20 || radius > 10000) {
         throw new Error('Permitted radius must be between 20 meters and 10,000 meters.');
       }
@@ -198,6 +200,7 @@ export const locationService = {
 
     const location = await this.getLocationById(location_id, cid);
     if (location.status !== 'active') throw new Error('Choose an active work location.');
+    if (!validateCoordinates(location.latitude, location.longitude).valid) throw new Error('This workstation has invalid GPS coordinates. Correct its map pin before assigning staff.');
     if (!['primary', 'secondary', 'temporary', 'permanent'].includes(assignment_type)) throw new Error('Invalid assignment type.');
 
     const isTemporary = assignment_type === 'temporary';
@@ -438,7 +441,7 @@ export const locationService = {
    */
   async getActivePermittedLocations(employeeId, companyId = 1) {
     const details = await this.getEmployeeLocations(employeeId, companyId);
-    return details.all_active_locations || [];
+    return (details.all_active_locations || []).filter(location => validateCoordinates(location.latitude, location.longitude).valid && Number(location.geofence_radius || location.geofence_radius_meters || 150) >= 20 && Number(location.geofence_radius || location.geofence_radius_meters || 150) <= 10000);
   },
 
   /**

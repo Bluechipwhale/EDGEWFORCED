@@ -303,7 +303,8 @@ test('Smart Shift Attendance & Nigeria Timezone Engine', async (t) => {
   // ============================================================================
   // 4. NORMAL STAFF EXEMPTION
   // ============================================================================
-  await t.test('4. Corporate staff use the same attendance windows', async () => {
+  await t.test('4. Corporate staff use the same attendance windows', async (staffTest) => {
+    staffTest.mock.timers.enable({ apis: ['Date'], now: Date.parse('2026-10-18T07:30:00Z') });
     // Clear attendance for Gloria (employee 3)
     const staffAtt = await db.find('attendance', { employee_id: 3 });
     for (const a of staffAtt) await db.delete('attendance', a.id);

@@ -14,6 +14,7 @@ import { hrService } from '../services/hrService.js';
 import { db, resetTestData } from './helpers/database.js';
 
 test('Work Locations & Dynamic Employee Attendance Suite', async (t) => {
+  t.mock.timers.enable({ apis: ['Date'], now: Date.parse('2026-10-18T07:30:00Z') });
   // Setup test company and locations
   const testCompanyId = 1;
 

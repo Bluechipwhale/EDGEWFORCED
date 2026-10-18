@@ -52,3 +52,7 @@ Passwords are never committed to source. A separate administrator is explicitly 
 - HR/HR_MANAGER users in the same company receive an in-app notice, even without an employee profile. Administrators receive fallback notices if no active HR account exists.
 - HR Overview has an activity review queue with explanations, resumed activity, Lagos timestamps, acknowledgement and history. Staff can explain their own events and continue working; review access is limited to authorized company managers.
 - Monitoring starts with a signed-in active staff profile and stops on explicit sign-out. It is not limited to clocked-in hours. Closing the browser without signing out can produce a connection-gap flag. A flag is context for human review, not proof that someone stopped working.
+
+## Workstation readiness and sign-in
+
+Staff can sign in using their work email, registered phone number or exact staff ID. Browser sessions keep refreshed tokens synchronized with API calls. HR can assign a workstation while a staff member remains signed in; attendance refreshes every 15 seconds and when reconnecting or returning to the app. Check my workstation verifies GPS proximity without creating attendance. Clocking rechecks the current assignment, permitted Lagos window and GPS before saving; duplicate requests cannot record twice. New workstation forms require the actual pin, GPS capture or entered coordinates. A workstation's display label alone does not grant attendance permission.
